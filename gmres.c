@@ -21,6 +21,18 @@ extern double * matVectProd( double * A, int nbl, int nbc, double * v, int t);
 extern void insertVect(double * Mat, double * v, int location, int size, int m);
 extern void extractVect(double * Mat, double * v, int location, int size, int stride);
 
+
+/*
+*	Initialisation du vecteur résultat b
+*
+*	Return: double * 
+*	
+*	@Param:
+*		double * b : vecteur résultat
+*		int size   : taille du vecteur
+*
+*/
+
 double * init_b(double * b, int size)
 {
 	int i;
@@ -32,6 +44,7 @@ double * init_b(double * b, int size)
 		
 	return b;
 }
+
 
 double min(double a, double b)
 {
@@ -88,22 +101,51 @@ void earlyConvergenceTest(bool * convergence, double * x, double * Krylov, doubl
 	}
 }
 
+/*
+*	Trouver le vecteur (ligne) de Hessenberg avec la plus petite norme vectorielle
+*
+*	Return : void
+*
+*	@Param:
+*		double   beta 	    : Norme du résidue r
+*		double * e1 	    : Vecteur cannonique (e1=[1,0,...,0])
+*		double * Hessenberg : Matrice triangulaire supérieure de Hessenberg
+*		double * y	    : vecteur avec norme minimale
+*		int 	 m	    : Taille du sous-espace de Krylov
+*		int 	 size	    : Taille de la matrice A (size x size)
+*		double   s	    : Norme minimale des vecteurs ligne de Hessenberg
+*/
+
 void secondConvergenceTest(double beta, double * e1, double * Hessenberg, double * y, int m, int size, double s)
 {
 	int i,j,k,location;
 	double * v = (double *)malloc(m*sizeof(double));
 
-	//printf("beta:%lf\n",beta);
 	solverY(e1, beta, Hessenberg, y, m, size, s, &location);
-	//printf("s:%lf, location: %d\n",s,location);
-	//vectPrint("y",y,m);
+
 	for(i=0;i<m;i++)
 	{
 		y[i]=Hessenberg[location];
 		location++;
 	}
-	//vectPrint("y",y,m);
 }
+
+/*
+*	Algorithme de GMRES(m) avec redémarrage implicite, toutes les matrices sont en 1D
+*
+*	Return: void
+*
+*	@Param:
+*		double * A	    : Matrice du système d'équations linéaires non-symmétrique 
+*		double * x	    : Vecteur solution du système (initialisé avec x:=[1,0,0,0,...,0])
+*		double * b	    : Vecteur résultat du système Ax = b
+*		double * r	    : Vecteur résiduelle
+*		double * q	    : Vecteur utilisé pour construire la matrice accompagnante du sous-espace de Krylov
+*		double * Hessenberg : Matrice de Hessenberg
+*		double * Krylov	    : Matrice de Krylov
+*		int 	 size       : (size x size) taille de la matrice A
+*		int	 m	    : (m << size)
+*/
 
 void gmres(double * A, double * x, double * b, double * r, double * q, double * Hessenberg, double * Krylov, int size, int m)
 {
